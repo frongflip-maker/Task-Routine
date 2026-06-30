@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />
+<title>Discipline OS</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js" crossorigin></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+<style>html,body,#root{height:100%;margin:0;}body{background:#080A12;-webkit-tap-highlight-color:transparent;color:#fff;font-family:system-ui,sans-serif;}::-webkit-scrollbar{display:none;}#err{display:none;padding:16px;font-size:13px;line-height:1.6;white-space:pre-wrap;color:#fca5a5;}#boot{padding:20px;color:#64748B;font-size:14px;}</style>
+</head>
+<body>
+<div id="boot">กำลังโหลด…</div>
+<div id="err"></div>
+<div id="root"></div>
+<script>
+function showErr(t){var e=document.getElementById("err");e.style.display="block";e.textContent=t;var b=document.getElementById("boot");if(b)b.style.display="none";}
+window.onerror=function(m,s,l){showErr("ERROR:\n"+m+"\n(line "+l+")");};
+window.addEventListener("load",function(){setTimeout(function(){var miss=[];if(!window.React)miss.push("React");if(!window.ReactDOM)miss.push("ReactDOM");if(!window.lucide)miss.push("lucide");if(!window.Babel)miss.push("Babel");if(miss.length)showErr("โหลด library ไม่ได้: "+miss.join(", "));},3000);});
+</script>
+<script type="text/babel" data-presets="react">
+try {
+var useState=React.useState,useMemo=React.useMemo,useEffect=React.useEffect;
+var createRoot=ReactDOM.createRoot;
+function makeIcon(name){var node=(window.lucide&&window.lucide.icons&&window.lucide.icons[name])||null;return function(props){var p=props||{};var size=p.size||24,color=p.color||"currentColor",style=p.style||{},className=p.className,sw=p.strokeWidth||2;if(!node)return React.createElement("span",{style:{display:"inline-block",width:size,height:size}});var children=node.map(function(c,i){return React.createElement(c[0],Object.assign({key:i},c[1]));});return React.createElement("svg",{xmlns:"http://www.w3.org/2000/svg",width:size,height:size,viewBox:"0 0 24 24",fill:"none",stroke:color,strokeWidth:sw,strokeLinecap:"round",strokeLinejoin:"round",style:style,className:className},children);};}
+const Home = makeIcon("Home");
+const CalendarDays = makeIcon("CalendarDays");
+const Swords = makeIcon("Swords");
+const Music = makeIcon("Music");
+const BarChart3 = makeIcon("BarChart3");
+const Plus = makeIcon("Plus");
+const X = makeIcon("X");
+const Check = makeIcon("Check");
+const Flame = makeIcon("Flame");
+const Zap = makeIcon("Zap");
+const Briefcase = makeIcon("Briefcase");
+const Dumbbell = makeIcon("Dumbbell");
+const Video = makeIcon("Video");
+const Map = makeIcon("Map");
+const FileText = makeIcon("FileText");
+const Moon = makeIcon("Moon");
+const User = makeIcon("User");
+const Circle = makeIcon("Circle");
+const Speaker = makeIcon("Speaker");
+const Sparkles = makeIcon("Sparkles");
+const TrendingUp = makeIcon("TrendingUp");
+const Clock = makeIcon("Clock");
+const Heart = makeIcon("Heart");
+const ChevronLeft = makeIcon("ChevronLeft");
+const ChevronRight = makeIcon("ChevronRight");
+const Trophy = makeIcon("Trophy");
+const Settings = makeIcon("Settings");
+const Download = makeIcon("Download");
+const Upload = makeIcon("Upload");
+const Cloud = makeIcon("Cloud");
+const Gift = makeIcon("Gift");
+const RotateCcw = makeIcon("RotateCcw");
+const History = makeIcon("History");
+const Battery = makeIcon("Battery");
+const Wand2 = makeIcon("Wand2");
+const Trash2 = makeIcon("Trash2");
+
+
+/* ════════════════ THEME TOKENS ════════════════ */
+const T = {
+  bg:"#080A12", surf:"#111827", surf2:"#182033", border:"#27324A",
+  text:"#F8FAFC", sub:"#94A3B8", muted:"#64748B",
+  purple:"#8B5CF6", blue:"#38BDF8", green:"#22C55E", orange:"#F97316",
+  red:"#EF4444", cyan:"#06B6D4", gold:"#FACC15", pink:"#EC4899",
+  violet:"#7C3AED", indigo:"#6366F1", slate:"#64748B", gray:"#6B7280",
+};
+const glow = (c, a=0.35) => `0 0 0 1px ${c}33, 0 8px 28px ${hex(c,a)}`;
+function hex(c,a){ const n=parseInt(c.slice(1),16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
+
+/* ════════════════ DOMAIN CONFIG ════════════════ */
+const EVENT_TYPES = {
+  work:    { label:"Work",     Icon:Briefcase, color:T.blue },
+  studio:  { label:"Studio",   Icon:Speaker,   color:T.purple },
+  fitness: { label:"Fitness",  Icon:Dumbbell,  color:T.green },
+  content: { label:"Content",  Icon:Video,     color:T.pink },
+  practice:{ label:"Practice", Icon:Music,     color:T.violet },
+  social:  { label:"Social",   Icon:Map,       color:T.gold },
+  admin:   { label:"Admin",    Icon:FileText,  color:T.slate },
+  recovery:{ label:"Recovery", Icon:Moon,      color:T.cyan },
+  personal:{ label:"Personal", Icon:User,      color:T.indigo },
+  other:   { label:"Other",    Icon:Circle,    color:T.gray },
+};
+const QUEST_TYPES = {
+  main:    { label:"Main Quest",    color:T.gold,   bucket:"cal" },
+  growth:  { label:"Growth Quest",  color:T.blue,   bucket:"growth" },
+  boss:    { label:"Boss Fight",    color:T.orange, bucket:"growth" },
+  tiny:    { label:"Tiny Quest",    color:T.green,  bucket:"growth" },
+  recovery:{ label:"Recovery Quest",color:T.cyan,   bucket:"rec" },
+  studio:  { label:"Studio Quest",  color:T.purple, bucket:"money" },
+  admin:   { label:"Admin Quest",   color:T.slate,  bucket:"money" },
+  habit:   { label:"Daily Habit",   color:T.violet, bucket:"rec" },
+};
+const DIFF = { Easy:5, Normal:10, Hard:20, Boss:50 };
+const DAY_MODES = {
+  push:      { label:"Push Day",      color:T.orange, tag:"พลังเต็ม ลุยให้สุด" },
+  productive:{ label:"Productive Day", color:T.blue,  tag:"งานแน่น แต่ไหว" },
+  balanced:  { label:"Balanced Day",  color:T.green,  tag:"สมดุล เดินหน้าพอดี" },
+  recovery:  { label:"Recovery Day",  color:T.cyan,   tag:"ฟื้นตัว ชนะขั้นต่ำพอ" },
+  survival:  { label:"Survival Day",  color:T.purple, tag:"แค่ผ่านวันนี้ก็เก่งแล้ว" },
+};
+const DECKS = {
+  Music:    ["ซ้อมกลอง 20 นาที","แกะเพลง 1 ท่อน","ซ้อม rudiment","ฟังเพลงแล้วจด groove"],
+  Content:  ["เขียนไอเดียคลิป 3 หัวข้อ","ตัดคลิป 30 นาที","ถ่าย B-roll สตูดิโอ","เขียน hook 5 แบบ"],
+  Body:     ["ฟิตเนส","เดิน 20 นาที","Mobility 10 นาที","ยืดตัวก่อนนอน"],
+  Studio:   ["ถ่ายรูปห้องซ้อม","เช็กอุปกรณ์","อัปเดตโปรโมชัน","บันทึกรายรับ"],
+  Money:    ["จดรายรับรายจ่าย","เช็กพอร์ต","วางแผน DCA","สรุปเงินสด"],
+  Admin:    ["เก็บห้อง 10 นาที","เคลียร์ไฟล์","ตอบแชทค้าง","วางแผนพรุ่งนี้"],
+  Recovery: ["Journal 3 บรรทัด","ปิดจอก่อนนอน","หายใจลึก 3 นาที","ยืดคอ บ่า ไหล่"],
+};
+const DECK_QTYPE = { Music:"growth", Content:"growth", Body:"growth", Studio:"studio", Money:"admin", Admin:"admin", Recovery:"recovery" };
+const DECK_DIFF  = { Music:"Normal", Content:"Normal", Body:"Normal", Studio:"Easy", Money:"Easy", Admin:"Easy", Recovery:"Easy" };
+const LEVELS = [
+  {lv:1,name:"Rookie"},{lv:5,name:"Consistent Player"},{lv:10,name:"Studio Grinder"},
+  {lv:20,name:"Discipline Beast"},{lv:35,name:"Elite Performer"},{lv:50,name:"Legendary Musician"},
+];
+
+/* ════════════════ DATE / ENGINE UTILS ════════════════ */
+const TH_M = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const TH_D = ["อา","จ","อ","พ","พฤ","ศ","ส"];
+const today = new Date();
+const dkey = (d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const parseK = (k)=>{const[y,m,dd]=k.split("-").map(Number);return new Date(y,m-1,dd);};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+const toMin=(t)=>{if(!t)return 0;const[h,m]=t.split(":").map(Number);return h*60+m;};
+const hoursBetween=(a,b)=>Math.max(0,(toMin(b)-toMin(a))/60);
+
+function calLoad(events){
+  const h = events.reduce((s,e)=>s+hoursBetween(e.startTime,e.endTime),0);
+  let label="Light"; if(h>8)label="Extreme"; else if(h>=6)label="Heavy"; else if(h>=3)label="Medium";
+  return { hours:h, label };
+}
+function computeDayMode(recovery, loadLabel){
+  const light = loadLabel==="Light"||loadLabel==="Medium";
+  if(recovery<35 || loadLabel==="Extreme") return "survival";
+  if(recovery>=75) return light ? "push" : "productive";
+  if(recovery>=50) return "balanced";
+  if(recovery>=35) return light ? "recovery" : "balanced";
+  return "survival";
+}
+function rankOf(s){ if(s>=90)return{r:"S",c:T.gold}; if(s>=75)return{r:"A",c:T.green}; if(s>=60)return{r:"B",c:T.blue}; if(s>=40)return{r:"C",c:T.orange}; return{r:"Recovery",c:T.cyan}; }
+
+function computeScore({events, quests, reviewDone, streakActive}){
+  const ratio = (arr)=>{ const done=arr.filter(x=>x.status==="done").length; return arr.length? done/arr.length : null; };
+  const q = (b)=>quests.filter(x=>QUEST_TYPES[x.type]?.bucket===b);
+  const buckets = [
+    { key:"cal",    label:"Responsibility", weight:30, items:[...events, ...q("cal")] },
+    { key:"growth", label:"Growth",         weight:30, items:q("growth") },
+    { key:"money",  label:"Studio · Money", weight:15, items:q("money") },
+    { key:"rec",    label:"Recovery",       weight:15, items:[...q("rec"), ...(reviewDone!==null?[{status:reviewDone?"done":"open"}]:[])] },
+  ].map(b=>({ ...b, ratio: ratio(b.items), active: b.items.length>0 }));
+  const bonusRatio = Math.min(1, (streakActive?0.4:0) + (quests.some(x=>x.type==="main"&&x.status==="done")?0.3:0) + (quests.some(x=>x.type==="boss"&&x.status==="done")?0.3:0));
+  const active = buckets.filter(b=>b.active);
+  const baseSum = active.reduce((s,b)=>s+b.weight,0) + 10;
+  const scale = baseSum>0 ? 100/baseSum : 0;
+  let score = bonusRatio * 10 * scale;
+  active.forEach(b=>{ score += b.weight*scale*(b.ratio||0); });
+  const out = buckets.map(b=>({ ...b, adjWeight: b.active? Math.round(b.weight*scale):0 }));
+  out.push({ key:"bonus", label:"Bonus · Streak", weight:10, ratio:bonusRatio, active:true, adjWeight:Math.round(10*scale) });
+  return { score: Math.round(score), buckets: out };
+}
+const expForQuest=(q)=>{ let e=DIFF[q.difficulty]||10; if(q.type==="main")e+=20; if(q.type==="boss")e+=30; return e; };
+function levelFromExp(exp){ return Math.floor(exp/100)+1; }
+function levelName(lv){ let n=LEVELS[0].name; for(const m of LEVELS){ if(lv>=m.lv)n=m.name; } return n; }
+function encourage(rank, streak){
+  if(rank==="S") return `วันในตำนาน 🔥 ต่อเนื่อง ${streak} วัน`;
+  if(rank==="A") return `วันที่ดีมาก ทำได้เยี่ยม · streak ${streak}`;
+  if(rank==="B") return `เดินหน้าได้ดี รักษาจังหวะไว้ · streak ${streak}`;
+  if(rank==="C") return `ชนะขั้นต่ำแล้ว นั่นแหละสำคัญ · streak ${streak}`;
+  return `วันนี้พักได้ การกลับมาเขียนรีวิวก็คือชนะ · streak ${streak}`;
+}
+
+/* ── Energy budget: งบพลังจาก recovery เทียบ energyCost ของอีเวนต์ ── */
+const energyBudget = (recovery)=>Math.max(4, Math.round(recovery/7)); // recovery 72→10, 50→7, 35→5
+function dayEnergy(events, recovery){
+  const spent = events.reduce((s,e)=>s+(e.energyCost||0),0);
+  const budget = energyBudget(recovery);
+  const ratio = budget? spent/budget : 0;
+  const status = ratio>1 ? "over" : ratio>=0.8 ? "tight" : "ok";
+  return { spent, budget, ratio, status };
+}
+
+/* ── ข้อความ prep / follow-up อัตโนมัติตามประเภท event ── */
+const PREP_BY_TYPE = { studio:"เตรียมห้อง + เช็กอุปกรณ์", content:"เซ็ตอุปกรณ์ถ่าย", work:"เตรียมของ/สไลด์", practice:"วอร์มอัพก่อนซ้อม", fitness:"เตรียมชุด + อุ่นเครื่อง", social:"เช็กเส้นทาง/ของที่ต้องเอาไป", admin:"รวบรวมไฟล์ที่ต้องใช้", recovery:"จัดที่ให้พร้อมพัก", personal:"เตรียมตัวก่อนเริ่ม", other:"เตรียมตัวก่อนเริ่ม" };
+const FOLLOW_BY_TYPE = { studio:"เก็บเงิน + บันทึกรายรับ", content:"ตัด/อัปโหลดคลิป", work:"สรุป + ส่งงาน", practice:"จดสิ่งที่ต้องปรับ", fitness:"ยืด + บันทึกผล", social:"เก็บของ/ตอบแชทที่ค้าง", admin:"เก็บงานให้เรียบร้อย", recovery:"จดความรู้สึกหลังพัก", personal:"สรุป + เก็บงาน", other:"สรุป + เก็บงาน" };
+const FOLLOW_QTYPE = { studio:"studio", content:"growth", work:"admin", practice:"growth", fitness:"recovery", admin:"admin", recovery:"recovery" };
+
+/* ════════════════ MOCK SEED ════════════════ */
+const TK = dkey(today);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const seedEvents=()=>[
+  { id:uid(), title:"Gym", type:"fitness", date:TK, startTime:"13:00", endTime:"14:00", location:"Fitness First", energyCost:3, status:"done", income:0 },
+  { id:uid(), title:"สอนกลอง", type:"work", date:TK, startTime:"16:00", endTime:"17:30", location:"สตูดิโอ", energyCost:2, status:"scheduled", income:800 },
+  { id:uid(), title:"ห้องซ้อม: วง ABC", type:"studio", date:TK, startTime:"18:00", endTime:"20:00", location:"Room A", energyCost:1, status:"scheduled", income:600 },
+  { id:uid(), title:"Gig ร้าน XYZ", type:"practice", date:TK, startTime:"20:30", endTime:"23:00", location:"XYZ Bar", energyCost:4, status:"scheduled", income:2500 },
+];
+const seedQuests=()=>[
+  { id:uid(), title:"สอนกลองให้ครบคอร์ส", type:"main", difficulty:"Hard", date:TK, status:"open" },
+  { id:uid(), title:"ตัดคลิป 30 นาที", type:"growth", difficulty:"Normal", date:TK, status:"open" },
+  { id:uid(), title:"บันทึกรายรับห้องซ้อม", type:"studio", difficulty:"Easy", date:TK, status:"open" },
+  { id:uid(), title:"Daily Review + ยืดตัว", type:"recovery", difficulty:"Easy", date:TK, status:"open" },
+];
+const seedBookings=()=>[
+  { id:uid(), bandName:"วง ABC", date:dkey(addDays(today,-10)), startTime:"18:00", endTime:"20:00", ratePerHour:300, totalPrice:600, deposit:0,   paid:true,  bookingStatus:"Completed", note:"" },
+  { id:uid(), bandName:"วง ABC", date:dkey(addDays(today,-6)),  startTime:"18:00", endTime:"21:00", ratePerHour:300, totalPrice:900, deposit:0,   paid:true,  bookingStatus:"Completed", note:"" },
+  { id:uid(), bandName:"วง ABC", date:TK,                       startTime:"18:00", endTime:"20:00", ratePerHour:300, totalPrice:600, deposit:200, paid:false, bookingStatus:"Scheduled", note:"" },
+  { id:uid(), bandName:"วง ABC", date:dkey(addDays(today,4)),   startTime:"19:00", endTime:"22:00", ratePerHour:300, totalPrice:900, deposit:0,   paid:false, bookingStatus:"Scheduled", note:"จองล่วงหน้า" },
+  { id:uid(), bandName:"The Echoes", date:dkey(addDays(today,-1)), startTime:"19:00", endTime:"22:00", ratePerHour:300, totalPrice:900, deposit:0, paid:true, bookingStatus:"Completed", note:"" },
+];
+const seedReviews=()=>{
+  const mk=(off,score,win,energy,rec)=>[dkey(addDays(today,off)), {
+    win, obstacle:"นอนดึกไปนิด", tomorrowFocus:"เริ่มงานเช้าขึ้น", actualEnergy:energy,
+    score, rank:rankOf(score).r, earnedExp:45, minWin:true, whoop:{recovery:rec,sleep:80,strain:11}, ts:dkey(addDays(today,off)),
+  }];
+  return Object.fromEntries([ mk(-2,82,"ซ้อมกลอง + ตัดคลิปเสร็จ","ดี",70), mk(-1,76,"สอนครบ + เก็บเงินห้องซ้อม","กลางๆ",68) ]);
+};
+
+/* ════════════════ UI ATOMS ════════════════ */
+const Glass = ({children, style, glowColor, className=""}) => (
+  <div className={`rounded-2xl ${className}`} style={{
+    background:`linear-gradient(160deg, ${hex(T.surf2,0.9)}, ${hex(T.surf,0.92)})`,
+    border:`1px solid ${T.border}`, boxShadow: glowColor?glow(glowColor):"0 4px 20px rgba(0,0,0,.3)", ...style }}>
+    {children}
+  </div>
+);
+const Pill = ({color, children, solid}) => (
+  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+    style={{ background: solid?color:hex(color,0.14), color: solid?"#0A0A0A":color, border:`1px solid ${hex(color,0.4)}` }}>
+    {children}
+  </span>
+);
+function Ring({value, color, size=92, label, sub}){
+  const r=size/2-7, c=2*Math.PI*r, off=c*(1-Math.min(value,100)/100);
+  return (
+    <div className="relative" style={{width:size,height:size}}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={T.surf2} strokeWidth="7"/>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="7" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={off} style={{transition:"stroke-dashoffset .6s ease", filter:`drop-shadow(0 0 6px ${hex(color,.6)})`}}/>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-2xl font-extrabold" style={{color:T.text}}>{label}</span>
+        {sub && <span className="text-[10px] font-medium" style={{color:T.muted}}>{sub}</span>}
+      </div>
+    </div>
+  );
+}
+const Bar = ({value, color}) => (
+  <div className="h-2 rounded-full overflow-hidden" style={{background:T.surf2}}>
+    <div className="h-full rounded-full" style={{width:`${Math.min(value,100)}%`, background:color, boxShadow:`0 0 8px ${hex(color,.6)}`, transition:"width .5s"}}/>
+  </div>
+);
+
+/* ════════════════ STORAGE LAYER (สลับ backend ที่เดียว) ════════════════ */
+const STORAGE_KEY = "discipline_os";
+const SCHEMA_VERSION = 1;
+
+/* adapter ทุกตัวมีหน้าตาเดียวกัน: load() -> snapshot|null, save(snapshot) */
+const localAdapter = {
+  load(){ try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; } catch { return null; } },
+  save(d){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {} },
+};
+/* 🔮 อนาคต — ต่อ auto-sync ข้ามเครื่อง โดยไม่ต้องรื้อแอป:
+   สร้าง adapter ใหม่ที่มี load()/save() หน้าตาเดียวกัน (async ได้) เช่น
+     const supabaseAdapter = {
+       async load(){ const {data} = await supabase.from("snapshots").select("data").eq("user_id",uid).single(); return data?.data ?? null; },
+       async save(d){ await supabase.from("snapshots").upsert({ user_id:uid, data:d }); },
+     };
+   แล้วเปลี่ยน "const storage = localAdapter" บรรทัดล่างนี้บรรทัดเดียว
+   ข้อมูลเดิม (snapshot ตัวเดียวกัน) ไหลขึ้น cloud ได้เลย ไม่ต้องกรอกใหม่ */
+const storage = localAdapter;
+
+/* migrate: อัป schema เก่า -> ใหม่ ให้ไฟล์/ข้อมูลเดิมไม่พัง */
+function migrate(snap){
+  if(!snap || typeof snap!=="object") return null;
+  const s = { ...snap };
+  s.version ??= 1;
+  // ตัวอย่างเผื่ออนาคต (เพิ่ม field โดยไม่ทำของเก่าพัง):
+  // if(s.version < 2){ s.quests = (s.quests||[]).map(q=>({ priority:"normal", ...q })); s.version = 2; }
+  s.events ??= []; s.quests ??= []; s.bookings ??= []; s.loyaltyBase ??= {};
+  s.bookings = s.bookings.map(b=>{ const paid = b.paid ?? (b.paymentStatus==="Paid"); return { deposit:0, ...b, paid }; });
+  s.whoop ??= { recovery:72, sleep:81, strain:11.4 };
+  s.reviews ??= {}; s.baseExp ??= 390;
+  return s;
+}
+
+/* ════════════════ GOOGLE CALENDAR (เฟส 1: read + write-on-create) ════════════════ */
+const GCAL_CLIENT_ID = "131799493461-df32kq5vdlbbkqg7n4r761kkea358l33.apps.googleusercontent.com";
+const GCAL_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+const gcal = {
+  _tc: null,
+  ready(){ return typeof window!=="undefined" && window.google && window.google.accounts && window.google.accounts.oauth2; },
+  connect(){
+    return new Promise((resolve,reject)=>{
+      if(!this.ready()){ reject(new Error("Google ยังไม่พร้อม — ต้องเปิดบนเว็บจริง (GitHub Pages) ไม่ใช่ preview")); return; }
+      this._tc = window.google.accounts.oauth2.initTokenClient({
+        client_id: GCAL_CLIENT_ID, scope: GCAL_SCOPE,
+        callback: (resp)=>{ if(resp && resp.access_token) resolve(resp.access_token); else reject(new Error("ไม่ได้รับสิทธิ์")); },
+      });
+      this._tc.requestAccessToken({ prompt: "" });
+    });
+  },
+  async list(token, timeMin, timeMax){
+    const url = "https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin="+encodeURIComponent(timeMin)+"&timeMax="+encodeURIComponent(timeMax)+"&singleEvents=true&orderBy=startTime&maxResults=250";
+    const r = await fetch(url, { headers:{ Authorization:"Bearer "+token } });
+    if(!r.ok) throw new Error("โหลดปฏิทินไม่สำเร็จ ("+r.status+")");
+    const data = await r.json();
+    return (data.items||[]).map(gcalToEvent).filter(Boolean);
+  },
+  async insert(token, ev){
+    const s = (ev.date||"")+"T"+((ev.startTime||"09:00"))+":00";
+    const e = (ev.date||"")+"T"+((ev.endTime||ev.startTime||"10:00"))+":00";
+    const body = { summary: ev.title, location: ev.location||"", start:{ dateTime:s, timeZone:"Asia/Bangkok" }, end:{ dateTime:e, timeZone:"Asia/Bangkok" }, reminders:{ useDefault:true } };
+    const r = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", { method:"POST", headers:{ Authorization:"Bearer "+token, "Content-Type":"application/json" }, body: JSON.stringify(body) });
+    if(!r.ok) throw new Error("เขียนเข้า Google ไม่สำเร็จ ("+r.status+")");
+    return r.json();
+  },
+};
+function gcalToEvent(it){
+  if(!it.start) return null;
+  const allDay = !!it.start.date;
+  const sd = it.start.dateTime || it.start.date;
+  const ed = it.end && (it.end.dateTime || it.end.date);
+  const hm = (x)=> x && x.length>10 ? x.slice(11,16) : "";
+  return { id:"g_"+it.id, title: it.summary||"(ไม่มีชื่อ)", type:"personal", date:(sd||"").slice(0,10),
+    startTime: allDay?"":hm(sd), endTime: allDay?"":hm(ed), location: it.location||"", energyCost:1, status:"scheduled", income:0, source:"gcal" };
+}
+
+/* ════════════════ APP ════════════════ */
+function App(){
+  const [tab, setTab] = useState("today");
+  const [events, setEvents] = useState(seedEvents);
+  const [quests, setQuests] = useState(seedQuests);
+  const [bookings, setBookings] = useState(seedBookings);
+  const [loyaltyBase, setLoyaltyBase] = useState({}); // map: band -> ชั่วโมงสะสม ณ จุดรีเซ็ตล่าสุด
+  const [whoop, setWhoop] = useState({ recovery:72, sleep:81, strain:11.4 });
+  const [reviews, setReviews] = useState(seedReviews); // map: dateKey -> finalized record
+  const [baseExp, setBaseExp] = useState(390); // mock: EXP สะสมก่อนเริ่มใช้แอป
+  const [sel, setSel] = useState(TK);
+  const [loaded, setLoaded] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [dataMsg, setDataMsg] = useState("");
+  const [gcalEvents, setGcalEvents] = useState([]);
+  const [gcalToken, setGcalToken] = useState(null);
+  const [gcalMsg, setGcalMsg] = useState("");
+
+  /* ---- persistence: load ครั้งเดียวตอนเปิด, แล้ว auto-save ทุกการเปลี่ยน ---- */
+  const buildSnapshot = () => ({ version:SCHEMA_VERSION, savedAt:new Date().toISOString(), events, quests, bookings, loyaltyBase, whoop, reviews, baseExp });
+  const applySnapshot = (s) => {
+    if(!s) return;
+    if(s.events) setEvents(s.events);
+    if(s.quests) setQuests(s.quests);
+    if(s.bookings) setBookings(s.bookings);
+    if(s.loyaltyBase) setLoyaltyBase(s.loyaltyBase);
+    if(s.whoop) setWhoop(s.whoop);
+    if(s.reviews) setReviews(s.reviews);
+    if(typeof s.baseExp==="number") setBaseExp(s.baseExp);
+  };
+  useEffect(()=>{ const s = migrate(storage.load()); if(s) applySnapshot(s); setLoaded(true); }, []);
+  useEffect(()=>{ if(loaded) storage.save(buildSnapshot()); }, [loaded, events, quests, bookings, loyaltyBase, whoop, reviews, baseExp]);
+
+  const exportData = () => {
+    try {
+      const blob = new Blob([JSON.stringify(buildSnapshot(),null,2)], { type:"application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `discipline-os-${dkey(new Date())}.json`; a.click();
+      URL.revokeObjectURL(url);
+      setDataMsg("ดาวน์โหลดไฟล์แล้ว — อัปขึ้น Drive ได้เลย");
+    } catch { setDataMsg("export ไม่สำเร็จในหน้านี้ (preview) — ใช้ได้บนเว็บจริง"); }
+  };
+  const importData = (file) => {
+    const r = new FileReader();
+    r.onload = () => {
+      try { const s = migrate(JSON.parse(r.result)); if(s){ applySnapshot(s); setDataMsg("นำเข้าข้อมูลสำเร็จ ✓"); } else setDataMsg("ไฟล์ไม่ถูกต้อง"); }
+      catch { setDataMsg("อ่านไฟล์ไม่ได้ — ตรวจว่าเป็นไฟล์ JSON ที่ export จากแอปนี้"); }
+    };
+    r.readAsText(file);
+  };
+
+  const allEvents = useMemo(()=>[...events, ...gcalEvents],[events,gcalEvents]);
+  const todayEvents = useMemo(()=>allEvents.filter(e=>e.date===sel).sort((a,b)=>toMin(a.startTime)-toMin(b.startTime)),[allEvents,sel]);
+  const todayQuests = useMemo(()=>quests.filter(q=>q.date===sel),[quests,sel]);
+  const load = useMemo(()=>calLoad(todayEvents),[todayEvents]);
+  const mode = computeDayMode(whoop.recovery, load.label);
+  const M = DAY_MODES[mode];
+
+  const selReview = reviews[sel] || null;
+  const isFinalized = !!selReview;
+  const liveEarned = useMemo(()=>todayQuests.filter(q=>q.status==="done").reduce((s,q)=>s+expForQuest(q),0),[todayQuests]);
+  const liveMinWin = todayQuests.some(q=>q.type==="main"&&q.status==="done") || (whoop.recovery<50 && todayQuests.some(q=>q.type==="recovery"&&q.status==="done"));
+  const { score:liveScore, buckets } = useMemo(()=>computeScore({events:todayEvents, quests:todayQuests, reviewDone:isFinalized, streakActive:isFinalized?true:liveMinWin}),[todayEvents,todayQuests,isFinalized,liveMinWin]);
+  const score = isFinalized ? selReview.score : liveScore;
+  const rank = rankOf(score);
+  const earnedExp = isFinalized ? selReview.earnedExp : liveEarned;
+  const minWin = isFinalized ? selReview.minWin : liveMinWin;
+
+  // ── EXP สะสมข้ามวันจริง ──
+  const bankedExp = useMemo(()=>Object.values(reviews).reduce((s,r)=>s+(r.earnedExp||0),0),[reviews]);
+  const todayFinalized = !!reviews[TK];
+  const todayLive = useMemo(()=>quests.filter(q=>q.date===TK&&q.status==="done").reduce((s,q)=>s+expForQuest(q),0),[quests]);
+  const totalExp = baseExp + bankedExp + (todayFinalized?0:todayLive);
+  const level = levelFromExp(totalExp);
+
+  // ── streak: วันต่อเนื่องที่ "ชนะขั้นต่ำ" จนถึงวันนี้ ──
+  const streak = useMemo(()=>{
+    const wonOn=(k,isToday)=> reviews[k]? reviews[k].minWin : (isToday? liveMinWin : false);
+    let n=0; for(let i=0;i<400;i++){ const k=dkey(addDays(today,-i)); if(wonOn(k,i===0)) n++; else break; } return n;
+  },[reviews,liveMinWin]);
+
+  const toggleQuest=(id)=>setQuests(qs=>qs.map(q=>q.id===id?{...q,status:q.status==="done"?"open":"done"}:q));
+  const toggleEvent=(id)=>setEvents(es=>es.map(e=>e.id===id?{...e,status:e.status==="done"?"scheduled":"done"}:e));
+  const delEvent=(id)=>setEvents(es=>es.filter(e=>e.id!==id));
+  const addQuest=(q)=>setQuests(qs=>[...qs,{ id:uid(), status:"open", date:sel, ...q }]);
+  const delQuest=(id)=>setQuests(qs=>qs.filter(q=>q.id!==id));
+  const addEvent=(e)=>{
+    setEvents(es=>[...es,{ id:uid(), status:"scheduled", date:sel, ...e }]);
+    if(gcalToken){ gcal.insert(gcalToken, {...e, date:e.date||sel}).then(()=>refreshGcal(gcalToken)).catch(()=>{}); }
+  };
+  const refreshGcal=async(token)=>{
+    const tMin=new Date(Date.now()-7*864e5).toISOString();
+    const tMax=new Date(Date.now()+45*864e5).toISOString();
+    setGcalEvents(await gcal.list(token, tMin, tMax));
+  };
+  const connectGcal=async()=>{
+    try{ setGcalMsg("กำลังเชื่อม…"); const token=await gcal.connect(); setGcalToken(token); await refreshGcal(token); setGcalMsg("เชื่อมแล้ว ✓ ดึงนัดจาก Google มาแสดง · สร้าง event ใหม่จะเข้า Google + เตือนให้"); }
+    catch(e){ setGcalMsg("เชื่อมไม่สำเร็จ: "+(e.message||e)); }
+  };
+  const addBooking=(b)=>{
+    setBookings(bs=>[...bs,{ id:uid(), ...b }]);
+    setEvents(es=>[...es,{ id:uid(), title:`ห้องซ้อม: ${b.bandName}`, type:"studio", date:b.date, startTime:b.startTime, endTime:b.endTime, location:"Studio", energyCost:1, status:"scheduled", income:b.totalPrice }]);
+    setQuests(qs=>[...qs,
+      { id:uid(), title:`เตรียมห้องให้ ${b.bandName}`, type:"tiny", difficulty:"Easy", date:b.date, status:"open" },
+      { id:uid(), title:`เก็บเงิน + บันทึกรายรับ (${b.bandName})`, type:"studio", difficulty:"Easy", date:b.date, status:"open" },
+    ]);
+  };
+  // ── จบวัน: ล็อกคะแนน + แบงก์ EXP เข้าสะสม ──
+  const finalizeDay=(answers)=>{
+    const earned = liveEarned + 10; // +10 จาก Daily Review
+    const { score:sc } = computeScore({events:todayEvents, quests:todayQuests, reviewDone:true, streakActive:true});
+    const rec = { ...answers, score:sc, rank:rankOf(sc).r, earnedExp:earned, minWin:true, whoop:{...whoop}, ts:new Date().toISOString() };
+    setReviews(rv=>({ ...rv, [sel]:rec }));
+    return rec;
+  };
+  const reopenDay=()=>setReviews(rv=>{ const c={...rv}; delete c[sel]; return c; });
+  const resetLoyalty=(band, totalHours)=>setLoyaltyBase(m=>({ ...m, [band]: totalHours })); // ตั้ง base = ชั่วโมงรวมปัจจุบัน → ตัวนับกลับเป็น 0
+  const togglePaid=(id)=>setBookings(bs=>bs.map(b=>b.id===id?{...b,paid:!b.paid}:b));
+
+  const shared = { T, sel, setSel, events: allEvents, todayEvents, quests, todayQuests, bookings, whoop, setWhoop, reviews,
+    loyaltyBase, resetLoyalty, togglePaid,
+    load, mode, M, score, buckets, rank, level, totalExp, earnedExp, streak, minWin, liveMinWin, liveScore,
+    isFinalized, selReview, finalizeDay, reopenDay, gcalToken, gcalMsg, connectGcal,
+    toggleQuest, toggleEvent, delEvent, addQuest, delQuest, addEvent, addBooking, openSettings:()=>setSettingsOpen(true) };
+
+  const NAV=[["today",Home,"Today"],["calendar",CalendarDays,"Calendar"],["quests",Swords,"Quests"],["studio",Music,"Studio"],["dashboard",BarChart3,"Dashboard"]];
+
+  return (
+    <div style={{background:T.bg, color:T.text, fontFamily:"system-ui,-apple-system,sans-serif"}} className="min-h-screen w-full flex justify-center">
+      {/* ambient glow */}
+      <div className="fixed inset-0 pointer-events-none" style={{background:`radial-gradient(600px 300px at 80% -5%, ${hex(M.color,.12)}, transparent 70%), radial-gradient(500px 300px at 0% 10%, ${hex(T.purple,.08)}, transparent 70%)`}}/>
+      <div className="w-full max-w-md flex flex-col min-h-screen relative">
+        <main className="flex-1 pb-24">
+          {tab==="today" && <Today {...shared}/>}
+          {tab==="calendar" && <Calendar {...shared}/>}
+          {tab==="quests" && <Quests {...shared}/>}
+          {tab==="studio" && <Studio {...shared}/>}
+          {tab==="dashboard" && <Dashboard {...shared}/>}
+        </main>
+        {/* Bottom nav */}
+        <nav className="fixed bottom-0 left-0 right-0 flex justify-center z-30">
+          <div className="w-full max-w-md px-3 pb-3 pt-2" style={{background:`linear-gradient(to top, ${T.bg}, ${hex(T.bg,.85)} 70%, transparent)`}}>
+            <div className="flex items-center justify-around rounded-2xl py-1.5" style={{background:hex(T.surf,.9), border:`1px solid ${T.border}`, backdropFilter:"blur(8px)"}}>
+              {NAV.map(([id,Icon,label])=>{
+                const on = tab===id;
+                return (
+                  <button key={id} onClick={()=>setTab(id)} aria-label={label}
+                    className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition active:scale-90">
+                    <Icon size={21} style={{color:on?M.color:T.muted, filter:on?`drop-shadow(0 0 6px ${hex(M.color,.7)})`:"none"}}/>
+                    <span className="text-[9px] font-semibold" style={{color:on?T.text:T.muted}}>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </nav>
+
+        {settingsOpen && (
+          <Sheet onClose={()=>{ setSettingsOpen(false); setDataMsg(""); }} title="ข้อมูล & แบ็กอัพ">
+            <Glass className="p-3 mb-3 flex items-start gap-2">
+              <Cloud size={16} style={{color:T.green}} className="mt-0.5 shrink-0"/>
+              <div className="text-xs" style={{color:T.sub}}>เซฟอัตโนมัติลงเครื่องนี้ทุกการกด (localStorage) — เปิดใหม่ข้อมูลค้างเอง <span style={{color:T.muted}}>· ในหน้า preview นี้ยังรีเซ็ต เพราะ sandbox ปิด storage แต่บนเว็บจริงค้างถาวร</span></div>
+            </Glass>
+
+            <Label>ย้ายเครื่อง / สำรองไป Google Drive</Label>
+            <div className="flex gap-2 mb-1">
+              <button onClick={exportData} className="flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[.98]" style={{background:T.blue,color:"#000"}}>
+                <Download size={16}/> Export JSON
+              </button>
+              <label className="flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[.98] cursor-pointer" style={{background:T.surf2,color:T.text,border:`1px solid ${T.border}`}}>
+                <Upload size={16}/> Import
+                <input type="file" accept="application/json,.json" className="hidden" onChange={e=>{ if(e.target.files[0]) importData(e.target.files[0]); }}/>
+              </label>
+            </div>
+            {dataMsg && <div className="text-xs mt-2 px-1" style={{color:T.green}}>{dataMsg}</div>}
+
+            <div className="mt-4 mb-1"><Label>Google Calendar (sync + แจ้งเตือน)</Label></div>
+            <button onClick={connectGcal} className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[.98]" style={{background: gcalToken?T.surf2:"#fff", color: gcalToken?T.green:"#000", border:`1px solid ${gcalToken?T.green:T.border}`}}>
+              <CalendarDays size={16}/> {gcalToken?"เชื่อมแล้ว · ดึงนัดใหม่":"เชื่อม Google Calendar"}
+            </button>
+            <div className="text-[11px] mt-2 px-1" style={{color: gcalMsg.startsWith("เชื่อมไม่")?T.red:T.muted}}>
+              {gcalMsg || "ดึงนัดจาก Google มาแสดง + สร้าง event ในแอปจะเข้า Google แล้วเตือนให้ · ใช้ได้บนเว็บจริงเท่านั้น (ไม่ใช่ preview)"}
+            </div>
+
+            <div className="mt-4 p-3 rounded-xl" style={{border:`1px dashed ${T.border}`}}>
+              <div className="text-xs font-bold mb-1" style={{color:T.sub}}>อยากให้ sync ข้ามเครื่องอัตโนมัติในอนาคต?</div>
+              <div className="text-[11px]" style={{color:T.muted}}>โครงสร้างพร้อมแล้ว — ไฟล์ JSON ที่ export เป็น "snapshot" รูปแบบเดียวกับที่จะส่งขึ้น Supabase/Firebase สลับได้โดยแก้ adapter บรรทัดเดียว ข้อมูลเดิมไหลขึ้น cloud ไม่ต้องกรอกใหม่</div>
+            </div>
+          </Sheet>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════ TODAY ════════════════ */
+function Today(props){
+  const { sel, todayEvents, todayQuests, whoop, setWhoop, load, mode, M, score, buckets, rank, level, totalExp, earnedExp, streak, minWin, isFinalized, selReview, finalizeDay, reopenDay, toggleQuest, toggleEvent, addQuest, openSettings } = props;
+  const d = parseK(sel);
+  const expPct = (totalExp%100);
+  const lowDay = mode==="recovery"||mode==="survival";
+  const [reviewOpen, setReviewOpen] = useState(false);
+
+  // suggestions by mode
+  const sugg = useMemo(()=>{
+    const pick=(deck,n)=>DECKS[deck].slice(0,n).map(title=>({deck,title}));
+    if(mode==="survival") return pick("Recovery",2);
+    if(mode==="recovery") return [...pick("Recovery",2),...pick("Body",1)];
+    if(mode==="balanced") return [...pick("Music",1),...pick("Content",1),...pick("Recovery",1)];
+    if(mode==="productive") return [...pick("Music",1),...pick("Studio",1),...pick("Recovery",1)];
+    return [...pick("Music",1),...pick("Content",1),...pick("Body",1),...pick("Money",1)];
+  },[mode]);
+
+  return (
+    <div className="px-4 pt-5 space-y-4">
+      {/* header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-xs font-semibold tracking-widest uppercase" style={{color:M.color}}>Command Center</div>
+          <h1 className="text-2xl font-extrabold">{TH_D[d.getDay()]} {d.getDate()} {TH_M[d.getMonth()]}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={openSettings} aria-label="ข้อมูลและแบ็กอัพ" className="w-10 h-10 rounded-xl flex items-center justify-center active:scale-90" style={{background:hex(T.surf2,.9),border:`1px solid ${T.border}`}}>
+            <Settings size={17} style={{color:T.sub}}/>
+          </button>
+          <Glass className="px-3 py-2 flex items-center gap-2" glowColor={T.gold}>
+            <Flame size={18} style={{color:T.orange}}/>
+            <div className="leading-none"><div className="text-lg font-extrabold">{streak}</div><div className="text-[9px]" style={{color:T.muted}}>STREAK</div></div>
+          </Glass>
+        </div>
+      </div>
+
+      {/* Level + EXP */}
+      <Glass className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2"><Sparkles size={16} style={{color:T.purple}}/><span className="font-bold">{levelName(level)}</span></div>
+          <span className="text-sm font-bold" style={{color:T.purple}}>LV {level}</span>
+        </div>
+        <Bar value={expPct} color={T.purple}/>
+        <div className="flex justify-between mt-1.5 text-[11px]" style={{color:T.muted}}>
+          <span>{totalExp} EXP</span><span>+{earnedExp} วันนี้ · อีก {100-expPct} ถึง LV {level+1}</span>
+        </div>
+      </Glass>
+
+      {/* Day Mode + Score hero */}
+      <Glass className="p-4" glowColor={M.color}>
+        <div className="flex items-center gap-4">
+          <Ring value={score} color={rank.c} label={score} sub="/100"/>
+          <div className="flex-1 min-w-0">
+            <Pill color={M.color} solid>{M.label}</Pill>
+            <div className="text-xs mt-1.5" style={{color:T.sub}}>{M.tag}</div>
+            <div className="flex items-center gap-2 mt-2">
+              <Pill color={rank.c}><Trophy size={11}/> {rank.r==="Recovery"?"Recovery Day":`${rank.r} Rank`}</Pill>
+              <Pill color={load.label==="Extreme"?T.red:load.label==="Heavy"?T.orange:T.green}>Load: {load.label}</Pill>
+            </div>
+          </div>
+        </div>
+        {/* score breakdown */}
+        <div className="grid grid-cols-5 gap-1.5 mt-3">
+          {buckets.map(b=>(
+            <div key={b.key} className="text-center">
+              <div className="h-12 flex items-end justify-center rounded-md overflow-hidden" style={{background:T.surf2}}>
+                <div className="w-full rounded-md" style={{height:`${Math.max(8,(b.ratio||0)*100)}%`, background:(b.ratio||0)>0?M.color:T.border}}/>
+              </div>
+              <div className="text-[8px] mt-1 leading-tight" style={{color:T.muted}}>{b.label}</div>
+              <div className="text-[8px] font-bold" style={{color:T.sub}}>{b.adjWeight}%</div>
+            </div>
+          ))}
+        </div>
+      </Glass>
+
+      {/* WHOOP input */}
+      <Glass className="p-4">
+        <div className="flex items-center gap-2 mb-3"><Heart size={15} style={{color:T.green}}/><span className="font-bold text-sm">WHOOP วันนี้</span><span className="text-[10px]" style={{color:T.muted}}>(กรอกเอง · MVP)</span></div>
+        {[["recovery","Recovery","%",0,100,T.green],["sleep","Sleep","%",0,100,T.cyan],["strain","Strain","",0,21,T.orange]].map(([k,lbl,unit,mn,mx,c])=>(
+          <div key={k} className="mb-3 last:mb-0">
+            <div className="flex justify-between text-xs mb-1"><span style={{color:T.sub}}>{lbl}</span><span className="font-bold" style={{color:c}}>{whoop[k]}{unit}</span></div>
+            <input type="range" min={mn} max={mx} step={k==="strain"?0.1:1} value={whoop[k]}
+              onChange={e=>setWhoop(w=>({...w,[k]:Number(e.target.value)}))}
+              className="w-full" style={{accentColor:c}}/>
+          </div>
+        ))}
+      </Glass>
+
+      {/* Energy budget */}
+      {(()=>{
+        const en = dayEnergy(todayEvents, whoop.recovery);
+        const c = en.status==="over"?T.red:en.status==="tight"?T.orange:T.green;
+        const msg = en.status==="over" ? "วันนี้แน่นเกินงบพลัง — ลดเควสต์ที่ไม่ด่วน เลื่อนงานที่เลื่อนได้ หรือสลับเป็นโหมดฟื้นตัว"
+          : en.status==="tight" ? "เริ่มแน่นแล้ว เผื่อแรงไว้หน่อย อย่าเพิ่มงานเกินจำเป็น"
+          : "ยังไหว มีพลังเหลือ จะเพิ่มเควสต์ได้อีก";
+        return (
+          <Glass className="p-4" glowColor={en.status==="over"?T.red:undefined}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2"><Battery size={15} style={{color:c}}/><span className="font-bold text-sm">Energy Budget</span></div>
+              <span className="text-xs font-bold" style={{color:c}}>{en.spent}/{en.budget}</span>
+            </div>
+            <Bar value={en.ratio*100} color={c}/>
+            <div className="text-[11px] mt-2" style={{color: en.status==="ok"?T.sub:c}}>{msg}</div>
+          </Glass>
+        );
+      })()}
+
+      {/* Timeline */}
+      <Section title="Timeline" icon={Clock}>
+        {todayEvents.length===0 ? <Empty text="วันนี้ยังไม่มีอีเวนต์ — เพิ่มได้ในหน้า Calendar"/> :
+          <div className="space-y-2">{todayEvents.map(e=>{
+            const ET=EVENT_TYPES[e.type]; const done=e.status==="done";
+            return (
+              <Glass key={e.id} className="p-3 flex items-center gap-3" style={{borderLeft:`3px solid ${e.source==="gcal"?T.blue:ET.color}`, opacity:done?0.6:1}}>
+                {e.source==="gcal" ? (
+                  <span className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 text-[10px] font-bold" style={{background:hex(T.blue,.18),color:T.blue,border:`1px solid ${hex(T.blue,.5)}`}}>G</span>
+                ) : (
+                  <button onClick={()=>toggleEvent(e.id)} className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{background:done?ET.color:"transparent", border:`2px solid ${done?ET.color:T.border}`}}>{done&&<Check size={14} color="#000"/>}</button>
+                )}
+                <div className="w-12 text-center shrink-0"><div className="text-xs font-bold tabular-nums">{e.startTime||"—"}</div><div className="text-[9px]" style={{color:T.muted}}>{e.endTime}</div></div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm truncate" style={{textDecoration:done?"line-through":"none"}}>{e.title}</div>
+                  <div className="flex items-center gap-1.5 mt-0.5"><ET.Icon size={11} style={{color:ET.color}}/><span className="text-[10px]" style={{color:T.muted}}>{e.source==="gcal"?"Google Calendar":ET.label}{e.income?` · ฿${e.income}`:""}</span></div>
+                </div>
+              </Glass>
+            );
+          })}</div>}
+      </Section>
+
+      {/* Quest board */}
+      <Section title="Today Quests" icon={Swords}>
+        <div className="space-y-2">
+          {todayQuests.map(q=><QuestRow key={q.id} q={q} onToggle={toggleQuest}/>)}
+          {todayQuests.length===0 && <Empty text="ยังไม่มีเควสต์ — เพิ่มจาก Suggested ด้านล่าง หรือหน้า Quests"/>}
+        </div>
+      </Section>
+
+      {/* Daily Review / End of day */}
+      {isFinalized ? (
+        <Glass className="p-4" glowColor={rankOf(selReview.score).c}>
+          <div className="flex items-center gap-3">
+            <Ring value={selReview.score} color={rankOf(selReview.score).c} size={72} label={selReview.score} sub="/100"/>
+            <div className="flex-1">
+              <div className="flex items-center gap-2"><Check size={15} style={{color:T.green}}/><span className="font-bold text-sm">บันทึกวันนี้แล้ว</span></div>
+              <div className="flex items-center gap-2 mt-1.5">
+                <Pill color={rankOf(selReview.score).c}><Trophy size={11}/>{selReview.rank==="Recovery"?"Recovery Day":`${selReview.rank} Rank`}</Pill>
+                <Pill color={T.purple}><Zap size={11}/>+{selReview.earnedExp}</Pill>
+              </div>
+              <div className="text-[11px] mt-1.5" style={{color:T.sub}}>{encourage(selReview.rank, streak)}</div>
+            </div>
+          </div>
+          <button onClick={reopenDay} className="text-[11px] mt-3" style={{color:T.muted}}>แก้ไขรีวิวอีกครั้ง</button>
+        </Glass>
+      ) : (
+        <button onClick={()=>setReviewOpen(true)} className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-[.98] transition"
+          style={{background:`linear-gradient(120deg, ${M.color}, ${T.purple})`, color:"#fff", boxShadow:glow(M.color)}}>
+          <Moon size={18}/> จบวัน · Daily Review
+        </button>
+      )}
+
+      {reviewOpen && <DailyReviewModal mode={mode} M={M} liveScore={score} liveExp={earnedExp+10} streak={minWin?streak:streak+1}
+        onClose={()=>setReviewOpen(false)} onSubmit={finalizeDay}/>}
+
+      {/* Suggested */}
+      <Section title={lowDay?"วันนี้พักได้ ไม่ต้องฝืน":"Suggested Quests"} icon={Sparkles}>
+        {lowDay && <div className="text-xs mb-2 px-1" style={{color:T.cyan}}>{mode==="survival"?"แค่ผ่านวันนี้ + ดูแลตัวเอง ก็คือชนะแล้ว 💪":"โหมดฟื้นตัว — เลือกทำเบาๆ พอ ไม่มี Boss Fight"}</div>}
+        <div className="space-y-2">
+          {sugg.map((s,i)=>(
+            <Glass key={i} className="p-3 flex items-center gap-3">
+              <Pill color={QUEST_TYPES[DECK_QTYPE[s.deck]].color}>{s.deck}</Pill>
+              <span className="flex-1 text-sm truncate">{s.title}</span>
+              <button onClick={()=>addQuest({ title:s.title, type:DECK_QTYPE[s.deck], difficulty:DECK_DIFF[s.deck] })}
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 active:scale-90" style={{background:hex(M.color,.18), color:M.color}}><Plus size={16}/></button>
+            </Glass>
+          ))}
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+/* ════════════════ CALENDAR ════════════════ */
+function Calendar(props){
+  const { sel, setSel, events, addEvent, toggleEvent, delEvent, addQuest } = props;
+  const d = parseK(sel);
+  const week = useMemo(()=>{const s=addDays(d,-d.getDay());return Array.from({length:7},(_,i)=>addDays(s,i));},[sel]);
+  const dayEvents = events.filter(e=>e.date===sel).sort((a,b)=>toMin(a.startTime)-toMin(b.startTime));
+  const [open,setOpen]=useState(false);
+  const [convEvent,setConvEvent]=useState(null);
+  const [confirmDel,setConfirmDel]=useState(null);
+
+  return (
+    <div className="px-4 pt-5 space-y-4">
+      <h1 className="text-2xl font-extrabold">Calendar</h1>
+      {/* week strip */}
+      <div className="flex gap-1.5">
+        {week.map(wd=>{ const k=dkey(wd); const on=k===sel; const n=events.filter(e=>e.date===k).length;
+          return (
+            <button key={k} onClick={()=>setSel(k)} className="flex-1 py-2 rounded-xl flex flex-col items-center gap-1 transition"
+              style={{background:on?T.purple:T.surf, border:`1px solid ${on?T.purple:T.border}`, boxShadow:on?glow(T.purple):"none"}}>
+              <span className="text-[9px]" style={{color:on?"#fff":T.muted}}>{TH_D[wd.getDay()]}</span>
+              <span className="text-base font-bold" style={{color:on?"#fff":T.text}}>{wd.getDate()}</span>
+              <span className="w-1 h-1 rounded-full" style={{background:n?(on?"#fff":T.purple):"transparent"}}/>
+            </button>
+          );
+        })}
+      </div>
+
+      <button onClick={()=>setOpen(true)} className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[.98]" style={{background:T.purple, color:"#fff", boxShadow:glow(T.purple)}}>
+        <Plus size={18}/> เพิ่ม Event
+      </button>
+
+      <div className="space-y-2">
+        {dayEvents.length===0 ? <Empty text="วันนี้ว่าง — เพิ่ม Event หรือพักก็ได้"/> :
+          dayEvents.map(e=>{ const ET=EVENT_TYPES[e.type]; const done=e.status==="done";
+            return (
+              <Glass key={e.id} className="p-3" style={{borderLeft:`3px solid ${e.source==="gcal"?T.blue:ET.color}`, opacity:done?0.6:1}}>
+                <div className="flex items-center gap-3">
+                  {e.source==="gcal" ? (
+                    <span className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 text-[10px] font-bold" style={{background:hex(T.blue,.18),color:T.blue,border:`1px solid ${hex(T.blue,.5)}`}}>G</span>
+                  ) : (
+                    <button onClick={()=>toggleEvent(e.id)} className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{background:done?ET.color:"transparent",border:`2px solid ${done?ET.color:T.border}`}}>{done&&<Check size={14} color="#000"/>}</button>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm truncate">{e.title}</div>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <ET.Icon size={11} style={{color:ET.color}}/>
+                      <span className="text-[10px]" style={{color:T.muted}}>{e.startTime?`${e.startTime}–${e.endTime} · `:""}{e.source==="gcal"?"Google Calendar":ET.label}{e.location?` · ${e.location}`:""}{e.income?` · ฿${e.income}`:""}</span>
+                    </div>
+                  </div>
+                  <button onClick={()=>setConvEvent(e)}
+                    className="text-[10px] font-bold px-2 py-1 rounded-lg shrink-0 flex items-center gap-1" style={{background:hex(T.gold,.16), color:T.gold}}><Wand2 size={11}/> Quest</button>
+                  {e.source!=="gcal" && (confirmDel===e.id ? (
+                    <button onClick={()=>{ delEvent(e.id); setConfirmDel(null); }}
+                      className="text-[10px] font-bold px-2 py-1 rounded-lg shrink-0" style={{background:T.red, color:"#fff"}}>ลบ?</button>
+                  ) : (
+                    <button onClick={()=>setConfirmDel(e.id)} aria-label="ลบ event"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{color:T.muted}}><Trash2 size={14}/></button>
+                  ))}
+                </div>
+              </Glass>
+            );
+          })}
+      </div>
+
+      {open && <EventModal onClose={()=>setOpen(false)} onSave={(e)=>{addEvent(e);setOpen(false);}}/>}
+      {convEvent && <EventQuestModal ev={convEvent} onClose={()=>setConvEvent(null)} onCreate={(list)=>{ list.forEach(q=>addQuest(q)); setConvEvent(null); }}/>}
+    </div>
+  );
+}
+
+function EventModal({onClose,onSave}){
+  const [f,setF]=useState({ title:"", type:"work", startTime:"09:00", endTime:"10:00", location:"", energyCost:2, income:"" });
+  return (
+    <Sheet onClose={onClose} title="เพิ่ม Event">
+      <Input label="ชื่อ" value={f.title} onChange={v=>setF({...f,title:v})} placeholder="เช่น สอนกลอง"/>
+      <div className="mb-3"><Label>ประเภท</Label>
+        <div className="flex gap-1.5 flex-wrap">{Object.entries(EVENT_TYPES).map(([k,v])=>{ const on=f.type===k;
+          return <button key={k} onClick={()=>setF({...f,type:k})} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium" style={{background:on?v.color:T.surf2,color:on?"#000":T.sub,border:`1px solid ${on?v.color:T.border}`}}><v.Icon size={12}/>{v.label}</button>;
+        })}</div>
+      </div>
+      <div className="flex gap-2 mb-3">
+        <div className="flex-1"><Label>เริ่ม</Label><TimeInput value={f.startTime} onChange={v=>setF({...f,startTime:v})}/></div>
+        <div className="flex-1"><Label>จบ</Label><TimeInput value={f.endTime} onChange={v=>setF({...f,endTime:v})}/></div>
+      </div>
+      <Input label="สถานที่ (optional)" value={f.location} onChange={v=>setF({...f,location:v})} placeholder="เช่น สตูดิโอ"/>
+      <Input label="รายรับ ฿ (optional)" value={f.income} onChange={v=>setF({...f,income:v})} placeholder="0" type="number"/>
+      <SaveBtn disabled={!f.title.trim()} onClick={()=>onSave({...f, income:Number(f.income)||0})}>เพิ่ม Event</SaveBtn>
+    </Sheet>
+  );
+}
+
+/* ── แปลง Event → Quest (Prep / Main / Follow-up) ── */
+function EventQuestModal({ ev, onClose, onCreate }){
+  const ET = EVENT_TYPES[ev.type];
+  const fType = FOLLOW_QTYPE[ev.type] || "admin";
+  const [rows,setRows]=useState({
+    prep:  { on:true,  title:`${PREP_BY_TYPE[ev.type]||"เตรียมตัว"} · ${ev.title}`,  type:"tiny",  difficulty:"Easy" },
+    main:  { on:true,  title:ev.title,                                               type:"main",  difficulty:"Normal" },
+    follow:{ on:false, title:`${FOLLOW_BY_TYPE[ev.type]||"สรุป + เก็บงาน"} · ${ev.title}`, type:fType, difficulty:"Easy" },
+  });
+  const set=(k,patch)=>setRows(r=>({ ...r, [k]:{ ...r[k], ...patch } }));
+  const create=()=>{
+    const out=Object.values(rows).filter(r=>r.on && r.title.trim())
+      .map(r=>({ title:r.title.trim(), type:r.type, difficulty:r.difficulty, date:ev.date, linkedEventId:ev.id }));
+    onCreate(out);
+  };
+  const labels={ prep:"Prep · เตรียมก่อน", main:"Main · ตัวงานเอง", follow:"Follow-up · ตามหลัง" };
+  const anyOn=Object.values(rows).some(r=>r.on);
+  return (
+    <Sheet onClose={onClose} title="แปลงเป็น Quest">
+      <div className="flex items-center gap-2 mb-3 text-xs" style={{color:T.sub}}><ET.Icon size={13} style={{color:ET.color}}/><span className="font-semibold truncate">{ev.title}</span><span style={{color:T.muted}}>· {ev.startTime}–{ev.endTime}</span></div>
+      {Object.entries(rows).map(([k,r])=>(
+        <div key={k} className="mb-3 p-3 rounded-xl" style={{background:T.surf2, border:`1px solid ${r.on?hex(QUEST_TYPES[r.type].color,.5):T.border}`}}>
+          <button onClick={()=>set(k,{on:!r.on})} className="flex items-center gap-2 mb-2 w-full">
+            <span className="w-5 h-5 rounded-md flex items-center justify-center shrink-0" style={{background:r.on?QUEST_TYPES[r.type].color:"transparent",border:`2px solid ${r.on?QUEST_TYPES[r.type].color:T.border}`}}>{r.on && <Check size={13} color="#000"/>}</span>
+            <span className="text-[11px] font-bold" style={{color:r.on?QUEST_TYPES[r.type].color:T.muted}}>{labels[k]}</span>
+            <span className="text-[10px] ml-auto" style={{color:T.muted}}>{r.difficulty} · +{DIFF[r.difficulty]+(r.type==="main"?20:0)} EXP</span>
+          </button>
+          {r.on && <input value={r.title} onChange={e=>set(k,{title:e.target.value})} className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{background:T.surf,color:T.text,border:`1px solid ${T.border}`}}/>}
+        </div>
+      ))}
+      <SaveBtn disabled={!anyOn} onClick={create}>สร้างเควสต์ที่เลือก</SaveBtn>
+      <div className="text-[10px] text-center mt-2" style={{color:T.muted}}>เควสต์จะผูกกับ event นี้ (linkedEventId) และอยู่ในวันเดียวกัน</div>
+    </Sheet>
+  );
+}
+
+/* ════════════════ QUESTS ════════════════ */
+function Quests(props){
+  const { todayQuests, toggleQuest, delQuest, addQuest } = props;
+  const [open,setOpen]=useState(false);
+  return (
+    <div className="px-4 pt-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-extrabold">Quest Deck</h1>
+        <button onClick={()=>setOpen(true)} className="px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-1 active:scale-95" style={{background:T.blue,color:"#000"}}><Plus size={15}/> Custom</button>
+      </div>
+
+      <Section title={`Today (${todayQuests.length})`} icon={Swords}>
+        <div className="space-y-2">{todayQuests.length===0?<Empty text="ยังไม่มีเควสต์วันนี้ — เพิ่มจากเด็คด้านล่าง"/>:todayQuests.map(q=><QuestRow key={q.id} q={q} onToggle={toggleQuest} onDelete={delQuest}/>)}</div>
+      </Section>
+
+      {Object.entries(DECKS).map(([deck,items])=>{
+        const c=QUEST_TYPES[DECK_QTYPE[deck]].color;
+        return (
+          <Section key={deck} title={deck} dot={c}>
+            <div className="grid grid-cols-1 gap-2">
+              {items.map((title,i)=>(
+                <Glass key={i} className="p-3 flex items-center gap-3">
+                  <span className="flex-1 text-sm">{title}</span>
+                  <Pill color={c}>{DECK_DIFF[deck]}</Pill>
+                  <button onClick={()=>addQuest({ title, type:DECK_QTYPE[deck], difficulty:DECK_DIFF[deck] })} className="w-8 h-8 rounded-lg flex items-center justify-center active:scale-90 shrink-0" style={{background:hex(c,.18),color:c}}><Plus size={16}/></button>
+                </Glass>
+              ))}
+            </div>
+          </Section>
+        );
+      })}
+      {open && <QuestModal onClose={()=>setOpen(false)} onSave={(q)=>{addQuest(q);setOpen(false);}}/>}
+    </div>
+  );
+}
+function QuestModal({onClose,onSave}){
+  const [f,setF]=useState({ title:"", type:"growth", difficulty:"Normal" });
+  return (
+    <Sheet onClose={onClose} title="Custom Quest">
+      <Input label="ชื่อเควสต์" value={f.title} onChange={v=>setF({...f,title:v})} placeholder="เช่น แกะเพลงใหม่"/>
+      <div className="mb-3"><Label>ประเภท</Label><div className="flex gap-1.5 flex-wrap">{Object.entries(QUEST_TYPES).map(([k,v])=>{const on=f.type===k;return <button key={k} onClick={()=>setF({...f,type:k})} className="px-2.5 py-1.5 rounded-lg text-xs font-medium" style={{background:on?v.color:T.surf2,color:on?"#000":T.sub,border:`1px solid ${on?v.color:T.border}`}}>{v.label}</button>;})}</div></div>
+      <div className="mb-3"><Label>ความยาก</Label><div className="flex gap-1.5">{Object.entries(DIFF).map(([k,e])=>{const on=f.difficulty===k;return <button key={k} onClick={()=>setF({...f,difficulty:k})} className="flex-1 py-2 rounded-lg text-xs font-bold" style={{background:on?T.purple:T.surf2,color:on?"#fff":T.sub}}>{k}<div className="text-[9px] opacity-70">{e} EXP</div></button>;})}</div></div>
+      <SaveBtn disabled={!f.title.trim()} onClick={()=>onSave(f)}>เพิ่มเควสต์</SaveBtn>
+    </Sheet>
+  );
+}
+
+/* ════════════════ STUDIO ════════════════ */
+function Studio(props){
+  const { bookings, addBooking, loyaltyBase, resetLoyalty, togglePaid } = props;
+  const [open,setOpen]=useState(false);
+  const [histBand,setHistBand]=useState(null);
+  const received = bookings.reduce((s,b)=>s+(b.paid?b.totalPrice:(b.deposit||0)),0);
+  const outstanding = bookings.reduce((s,b)=>s+(b.paid?0:b.totalPrice-(b.deposit||0)),0);
+  const hours = bookings.reduce((s,b)=>s+hoursBetween(b.startTime,b.endTime),0);
+
+  const payInfo=(b)=> b.paid
+    ? { label:"จ่ายครบ", color:T.green }
+    : (b.deposit>0
+        ? { label:`มัดจำ ฿${b.deposit.toLocaleString()} · ค้าง ฿${(b.totalPrice-b.deposit).toLocaleString()}`, color:T.orange }
+        : { label:"ยังไม่จ่าย", color:T.red });
+
+  // จัดกลุ่มตามวง — สะสมชั่วโมง (5 ฟรี 1) นับเฉพาะที่จ่ายครบ
+  const groups = useMemo(()=>{
+    const m={}; bookings.forEach(b=>{ (m[b.bandName] ??= []).push(b); });
+    return Object.entries(m).map(([band,list])=>{
+      const allHours = list.reduce((s,b)=>s+hoursBetween(b.startTime,b.endTime),0);
+      const paidHours = list.filter(b=>b.paid).reduce((s,b)=>s+hoursBetween(b.startTime,b.endTime),0);
+      const base = loyaltyBase[band]||0;
+      const tally = Math.max(0, paidHours-base);
+      return { band, list:[...list].sort((a,b)=>b.date.localeCompare(a.date)),
+        allHours, paidHours, tally, free:Math.floor(tally/5), prog:tally%5, sessions:list.length };
+    }).sort((a,b)=>b.allHours-a.allHours);
+  },[bookings,loyaltyBase]);
+
+  const sorted = [...bookings].sort((a,b)=>b.date.localeCompare(a.date));
+  const histGroup = groups.find(g=>g.band===histBand);
+
+  return (
+    <div className="px-4 pt-5 space-y-4">
+      <h1 className="text-2xl font-extrabold">Studio</h1>
+      <div className="grid grid-cols-3 gap-2">
+        <Stat label="รับแล้ว" value={`฿${received.toLocaleString()}`} color={T.green}/>
+        <Stat label="ค้างชำระ" value={`฿${outstanding.toLocaleString()}`} color={T.orange}/>
+        <Stat label="ชั่วโมงรวม" value={`${hours}h`} color={T.purple}/>
+      </div>
+      <button onClick={()=>setOpen(true)} className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-[.98]" style={{background:T.purple,color:"#fff",boxShadow:glow(T.purple)}}><Plus size={18}/> จองห้องซ้อม</button>
+
+      {/* วง / ลูกค้า — สะสมชั่วโมง (เฉพาะจ่ายครบ) */}
+      <Section title="วง / ลูกค้า · สะสมชั่วโมง" icon={Gift}>
+        <div className="space-y-2">
+          {groups.map(g=>(
+            <Glass key={g.band} className="p-4" glowColor={g.free>0?T.gold:undefined}>
+              <div className="flex items-center justify-between">
+                <button onClick={()=>setHistBand(g.band)} className="flex items-center gap-2 min-w-0">
+                  <Speaker size={16} style={{color:T.purple}}/>
+                  <span className="font-bold truncate">{g.band}</span>
+                  <ChevronRight size={14} style={{color:T.muted}}/>
+                </button>
+                {g.free>0 && <Pill color={T.gold} solid><Gift size={11}/> ฟรี {g.free} ชม.</Pill>}
+              </div>
+              <div className="mt-3">
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span style={{color:T.sub}}>สะสม {g.tally} ชม. <span style={{color:T.muted}}>(จ่ายครบ)</span></span>
+                  <span style={{color:T.muted}}>{g.prog}/5 → อีก {5-g.prog} ชม. ฟรี 1</span>
+                </div>
+                <div className="flex gap-1">
+                  {Array.from({length:5}).map((_,i)=>(
+                    <div key={i} className="flex-1 h-2.5 rounded-full" style={{background:i<g.prog?T.gold:T.surf2, boxShadow:i<g.prog?`0 0 6px ${hex(T.gold,.5)}`:"none"}}/>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-[10px]" style={{color:T.muted}}>{g.sessions} ครั้ง · จ่ายครบ {g.paidHours}/{g.allHours} ชม.</span>
+                <button onClick={()=>resetLoyalty(g.band, g.paidHours)} className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg" style={{background:hex(T.cyan,.14),color:T.cyan}}>
+                  <RotateCcw size={12}/> รีเซ็ตสะสม
+                </button>
+              </div>
+            </Glass>
+          ))}
+        </div>
+      </Section>
+
+      {/* การจองทั้งหมด */}
+      <Section title="การจอง" icon={History}>
+        <div className="space-y-2">
+          {sorted.map(b=>{
+            const dt=parseK(b.date); const future=b.date>TK; const isToday=b.date===TK; const pi=payInfo(b);
+            return (
+              <Glass key={b.id} className="p-4" glowColor={!b.paid?T.orange:undefined}>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2"><Speaker size={16} style={{color:T.purple}}/><span className="font-bold">{b.bandName}</span></div>
+                  <div className="flex items-center gap-1.5">{future && <Pill color={T.blue}>จะถึง</Pill>}{isToday && <Pill color={T.green}>วันนี้</Pill>}</div>
+                </div>
+                <div className="text-xs mt-2" style={{color:T.sub}}>{TH_D[dt.getDay()]} {dt.getDate()} {TH_M[dt.getMonth()]} · {b.startTime}–{b.endTime} · {hoursBetween(b.startTime,b.endTime)}h · ฿{b.ratePerHour}/ชม.</div>
+                <div className="flex items-center justify-between mt-3">
+                  <button onClick={()=>togglePaid(b.id)} className="flex items-center gap-2 active:scale-95">
+                    <span className="w-5 h-5 rounded-md flex items-center justify-center shrink-0" style={{background:b.paid?T.green:"transparent", border:`2px solid ${b.paid?T.green:T.border}`}}>{b.paid && <Check size={13} color="#000"/>}</span>
+                    <span className="text-[11px] font-semibold text-left" style={{color:pi.color}}>{pi.label}</span>
+                  </button>
+                  <span className="text-lg font-extrabold shrink-0" style={{color:T.gold}}>฿{b.totalPrice.toLocaleString()}</span>
+                </div>
+              </Glass>
+            );
+          })}
+        </div>
+      </Section>
+
+      {open && <BookingModal onClose={()=>setOpen(false)} onSave={(b)=>{addBooking(b);setOpen(false);}}/>}
+      {histBand && histGroup && (
+        <Sheet onClose={()=>setHistBand(null)} title={`ประวัติ · ${histBand}`}>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <Stat label="มาซ้อม" value={`${histGroup.sessions} ครั้ง`} color={T.purple}/>
+            <Stat label="ชม.รวม" value={`${histGroup.allHours}`} color={T.blue}/>
+            <Stat label="ฟรีสะสม" value={`${histGroup.free} ชม.`} color={T.gold}/>
+          </div>
+          <div className="space-y-2">
+            {histGroup.list.map(b=>{
+              const dt=parseK(b.date); const future=b.date>TK; const pi=payInfo(b);
+              return (
+                <Glass key={b.id} className="p-3 flex items-center gap-3" style={{opacity:future?0.85:1}}>
+                  <div className="w-11 text-center shrink-0">
+                    <div className="text-[9px]" style={{color:T.muted}}>{TH_D[dt.getDay()]}</div>
+                    <div className="text-base font-bold leading-none">{dt.getDate()}</div>
+                    <div className="text-[9px]" style={{color:T.muted}}>{TH_M[dt.getMonth()]}</div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold">{b.startTime}–{b.endTime} · {hoursBetween(b.startTime,b.endTime)}h · ฿{b.totalPrice.toLocaleString()}</div>
+                    <div className="text-[10px]" style={{color:pi.color}}>{future?"จะถึง · ":""}{pi.label}</div>
+                  </div>
+                  <button onClick={()=>togglePaid(b.id)} aria-label="จ่ายครบ" className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 active:scale-90" style={{background:b.paid?T.green:"transparent", border:`2px solid ${b.paid?T.green:T.border}`}}>{b.paid && <Check size={14} color="#000"/>}</button>
+                </Glass>
+              );
+            })}
+          </div>
+        </Sheet>
+      )}
+    </div>
+  );
+}
+function BookingModal({onClose,onSave}){
+  const [f,setF]=useState({ bandName:"", date:TK, startTime:"18:00", endTime:"20:00", ratePerHour:300, deposit:"", paid:false, bookingStatus:"Scheduled", note:"" });
+  const hrs=hoursBetween(f.startTime,f.endTime); const total=Math.round(hrs*f.ratePerHour);
+  const dep=Number(f.deposit)||0; const future=f.date>TK;
+  return (
+    <Sheet onClose={onClose} title="จองห้องซ้อม">
+      <Input label="ชื่อวง / ลูกค้า" value={f.bandName} onChange={v=>setF({...f,bandName:v})} placeholder="เช่น วง ABC"/>
+      <div className="mb-3"><Label>วันที่ {future && <span style={{color:T.blue}}>· จองล่วงหน้า</span>}</Label><DateInput value={f.date} onChange={v=>setF({...f,date:v})}/></div>
+      <div className="flex gap-2 mb-3">
+        <div className="flex-1"><Label>เริ่ม</Label><TimeInput value={f.startTime} onChange={v=>setF({...f,startTime:v})}/></div>
+        <div className="flex-1"><Label>จบ</Label><TimeInput value={f.endTime} onChange={v=>setF({...f,endTime:v})}/></div>
+      </div>
+      <div className="flex gap-2">
+        <div className="flex-1"><Input label="เรท ฿/ชั่วโมง" value={f.ratePerHour} onChange={v=>setF({...f,ratePerHour:Number(v)||0})} type="number"/></div>
+        <div className="flex-1"><Input label="มัดจำ ฿ (optional)" value={f.deposit} onChange={v=>setF({...f,deposit:v})} placeholder="0" type="number"/></div>
+      </div>
+      <Glass className="p-3 mb-3">
+        <div className="flex items-center justify-between"><span className="text-sm" style={{color:T.sub}}>{hrs} ชม. × ฿{f.ratePerHour}</span><span className="text-xl font-extrabold" style={{color:T.gold}}>฿{total.toLocaleString()}</span></div>
+        {dep>0 && !f.paid && <div className="flex items-center justify-between mt-1.5 text-[11px]"><span style={{color:T.orange}}>มัดจำ ฿{dep.toLocaleString()}</span><span style={{color:T.muted}}>ค้าง ฿{(total-dep).toLocaleString()}</span></div>}
+      </Glass>
+      <button onClick={()=>setF({...f,paid:!f.paid})} className="w-full mb-3 p-3 rounded-xl flex items-center gap-3 active:scale-[.99]" style={{background:T.surf2,border:`1px solid ${f.paid?T.green:T.border}`}}>
+        <span className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{background:f.paid?T.green:"transparent",border:`2px solid ${f.paid?T.green:T.border}`}}>{f.paid && <Check size={15} color="#000"/>}</span>
+        <span className="text-sm font-semibold" style={{color:f.paid?T.green:T.sub}}>จ่ายครบแล้ว</span>
+        <span className="text-[10px] ml-auto" style={{color:T.muted}}>ติ๊กทีหลังก็ได้</span>
+      </button>
+      <SaveBtn disabled={!f.bandName.trim()} onClick={()=>onSave({...f, deposit:dep, totalPrice:total})}>บันทึก + สร้างเควสต์</SaveBtn>
+      <div className="text-[10px] text-center mt-2" style={{color:T.muted}}>ชั่วโมงเข้าสะสม (5 ฟรี 1) เฉพาะเมื่อ “จ่ายครบ”</div>
+    </Sheet>
+  );
+}
+
+/* ════════════════ DASHBOARD ════════════════ */
+function Dashboard(props){
+  const { reviews, whoop, liveScore, liveMinWin, totalExp, streak } = props;
+  // 7 วันล่าสุด (เก่า→ใหม่) จากข้อมูลจริง
+  const row = Array.from({length:7},(_,i)=>{
+    const dt=addDays(today,-6+i); const k=dkey(dt); const isT=k===TK; const rv=reviews[k];
+    return {
+      dn:TH_D[dt.getDay()],
+      score: rv? rv.score : (isT? liveScore : null),
+      win: rv? rv.minWin : (isT? liveMinWin : false),
+      rec: rv?.whoop?.recovery ?? (isT? whoop.recovery : null),
+    };
+  });
+  const scored=row.filter(x=>x.score!=null);
+  const avgScore=scored.length?Math.round(scored.reduce((a,b)=>a+b.score,0)/scored.length):0;
+  const recKnown=row.map(x=>x.rec).filter(v=>v!=null);
+  const avgRec=recKnown.length?Math.round(recKnown.reduce((a,b)=>a+b,0)/recKnown.length):0;
+  const recFilled=row.map(x=>x.rec==null?avgRec:x.rec);
+  const winCount=row.filter(x=>x.win).length;
+  const r=rankOf(avgScore);
+  const cats=[["Music",8,T.violet],["Content",5,T.pink],["Body",6,T.green],["Studio",4,T.purple],["Recovery",7,T.cyan]];
+  const maxCat=Math.max(...cats.map(c=>c[1]));
+
+  return (
+    <div className="px-4 pt-5 space-y-4">
+      <h1 className="text-2xl font-extrabold">Weekly Dashboard</h1>
+      <div className="grid grid-cols-2 gap-2">
+        <Glass className="p-4" glowColor={r.c}><div className="text-xs" style={{color:T.muted}}>Discipline เฉลี่ย</div><div className="flex items-end gap-2"><span className="text-3xl font-extrabold">{avgScore}</span><Pill color={r.c}>{r.r==="Recovery"?"Rec":r.r}</Pill></div></Glass>
+        <Stat label="Minimum Win" value={`${winCount}/7 วัน`} color={T.green}/>
+        <Stat label="Streak" value={`${streak} วัน`} color={T.orange}/>
+        <Stat label="EXP รวม" value={totalExp.toLocaleString()} color={T.purple}/>
+      </div>
+
+      {/* heatmap */}
+      <Glass className="p-4">
+        <div className="text-sm font-bold mb-2">Minimum Win Heatmap</div>
+        <div className="flex gap-1.5 justify-between">{row.map((x,i)=>(
+          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+            <div className="w-full aspect-square rounded-md" style={{background:x.win?T.green:T.surf2, boxShadow:x.win?`0 0 8px ${hex(T.green,.5)}`:"none"}}/>
+            <span className="text-[9px]" style={{color:T.muted}}>{x.dn}</span>
+          </div>
+        ))}</div>
+      </Glass>
+
+      {/* recovery trend */}
+      <Glass className="p-4">
+        <div className="flex items-center gap-2 mb-2"><TrendingUp size={15} style={{color:T.green}}/><span className="text-sm font-bold">WHOOP Recovery</span><span className="text-[10px] ml-auto" style={{color:T.muted}}>เฉลี่ย {avgRec}%</span></div>
+        <Spark data={recFilled} color={T.green}/>
+        <div className="flex justify-between mt-1">{row.map((x,i)=><span key={i} className="text-[9px]" style={{color:T.muted}}>{x.dn}</span>)}</div>
+      </Glass>
+
+      {/* daily score bars */}
+      <Glass className="p-4">
+        <div className="text-sm font-bold mb-3">Daily Score</div>
+        <div className="flex items-end justify-between gap-1.5" style={{height:90}}>{row.map((x,i)=>{const rc=x.score!=null?rankOf(x.score).c:T.border;return (
+          <div key={i} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+            <span className="text-[8px] font-bold" style={{color:rc}}>{x.score!=null?x.score:"–"}</span>
+            <div className="w-full rounded-t-md" style={{height:`${x.score!=null?x.score:4}%`, background:rc, boxShadow:x.score!=null?`0 0 8px ${hex(rc,.4)}`:"none"}}/>
+            <span className="text-[9px]" style={{color:T.muted}}>{x.dn}</span>
+          </div>
+        );})}</div>
+      </Glass>
+
+      {/* category bars (mock) */}
+      <Glass className="p-4">
+        <div className="flex items-center justify-between mb-3"><span className="text-sm font-bold">Quest by Category</span><span className="text-[9px]" style={{color:T.muted}}>mock</span></div>
+        <div className="space-y-2">{cats.map(([name,v,c])=>(
+          <div key={name} className="flex items-center gap-2">
+            <span className="text-[11px] w-16 shrink-0" style={{color:T.sub}}>{name}</span>
+            <div className="flex-1"><Bar value={(v/maxCat)*100} color={c}/></div>
+            <span className="text-[11px] font-bold w-5 text-right" style={{color:c}}>{v}</span>
+          </div>
+        ))}</div>
+      </Glass>
+      <div className="text-[10px] text-center pb-2" style={{color:T.muted}}>heatmap · score · recovery = ข้อมูลจริงจาก Daily Review · category ยังเป็น mock</div>
+    </div>
+  );
+}
+function Spark({data,color}){
+  const w=300,h=56,mx=Math.max(...data),mn=Math.min(...data);
+  const pts=data.map((v,i)=>[i/(data.length-1)*w, h-((v-mn)/(mx-mn||1))*(h-8)-4]);
+  const dpath=pts.map((p,i)=>`${i?"L":"M"}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{height:56}}>
+      <path d={`${dpath} L${w} ${h} L0 ${h} Z`} fill={hex(color,.15)}/>
+      <path d={dpath} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" style={{filter:`drop-shadow(0 0 4px ${hex(color,.6)})`}}/>
+      {pts.map((p,i)=><circle key={i} cx={p[0]} cy={p[1]} r="2.5" fill={color}/>)}
+    </svg>
+  );
+}
+
+/* ════════════════ SHARED SMALL COMPONENTS ════════════════ */
+function QuestRow({q,onToggle,onDelete}){
+  const QT=QUEST_TYPES[q.type]; const done=q.status==="done";
+  return (
+    <Glass className="p-3 flex items-center gap-3" style={{borderLeft:`3px solid ${QT.color}`, opacity:done?0.6:1}}>
+      <button onClick={()=>onToggle(q.id)} className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 active:scale-90" style={{background:done?QT.color:"transparent",border:`2px solid ${done?QT.color:T.border}`}}>{done&&<Check size={14} color="#000"/>}</button>
+      <div className="flex-1 min-w-0">
+        <div className="font-semibold text-sm truncate" style={{textDecoration:done?"line-through":"none"}}>{q.title}</div>
+        <div className="text-[10px]" style={{color:T.muted}}>{QT.label} · {q.difficulty}</div>
+      </div>
+      <Pill color={QT.color}><Zap size={10}/>{expForQuest(q)}</Pill>
+      {onDelete && <button onClick={()=>onDelete(q.id)} className="shrink-0" style={{color:T.muted}}><X size={15}/></button>}
+    </Glass>
+  );
+}
+const Section = ({title,icon:Icon,dot,children}) => (
+  <div>
+    <div className="flex items-center gap-2 mb-2 px-1">
+      {Icon && <Icon size={15} style={{color:T.sub}}/>}
+      {dot && <span className="w-2.5 h-2.5 rounded-full" style={{background:dot}}/>}
+      <h2 className="text-sm font-bold tracking-wide" style={{color:T.sub}}>{title}</h2>
+    </div>
+    {children}
+  </div>
+);
+const Stat = ({label,value,color}) => (
+  <Glass className="p-3"><div className="text-[10px]" style={{color:T.muted}}>{label}</div><div className="text-lg font-extrabold" style={{color:color||T.text}}>{value}</div></Glass>
+);
+const Empty = ({text}) => (
+  <Glass className="py-8 flex items-center justify-center"><span className="text-xs" style={{color:T.muted}}>{text}</span></Glass>
+);
+
+/* form atoms */
+const Label = ({children}) => <div className="text-[11px] font-semibold mb-1" style={{color:T.sub}}>{children}</div>;
+function Input({label,value,onChange,placeholder,type="text"}){
+  return <div className="mb-3"><Label>{label}</Label>
+    <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
+      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{background:T.surf2,color:T.text,border:`1px solid ${T.border}`}}/></div>;
+}
+function TimeInput({value,onChange}){
+  return <input type="time" value={value} onChange={e=>onChange(e.target.value)} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{background:T.surf2,color:T.text,border:`1px solid ${T.border}`}}/>;
+}
+function DateInput({value,onChange}){
+  return <input type="date" value={value} onChange={e=>onChange(e.target.value)} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{background:T.surf2,color:T.text,border:`1px solid ${T.border}`}}/>;
+}
+const SaveBtn = ({disabled,onClick,children}) => (
+  <button disabled={disabled} onClick={onClick} className="w-full py-3.5 rounded-xl font-bold active:scale-[.98] transition" style={{background:disabled?T.border:T.green,color:disabled?T.muted:"#000"}}>{children}</button>
+);
+function Sheet({title,onClose,children}){
+  return (
+    <div className="fixed inset-0 z-40 flex items-end justify-center" style={{background:"rgba(0,0,0,.6)"}} onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-3xl p-5 pb-7 max-h-[88vh] overflow-y-auto" style={{background:T.surf,border:`1px solid ${T.border}`}} onClick={e=>e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4"><h3 className="font-bold text-lg">{title}</h3><button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center" style={{background:T.surf2}}><X size={18}/></button></div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ── Daily Review (form → result) ── */
+function DailyReviewModal({ mode, M, liveScore, streak, onClose, onSubmit }){
+  const [phase,setPhase]=useState("form");
+  const [f,setF]=useState({ win:"", obstacle:"", tomorrowFocus:"", actualEnergy:"ดี" });
+  const [result,setResult]=useState(null);
+  const submit=()=>{ const rec=onSubmit(f); setResult(rec); setPhase("result"); };
+
+  return (
+    <Sheet onClose={onClose} title={phase==="form"?"Daily Review":"สรุปวันนี้"}>
+      {phase==="form" ? (
+        <>
+          <ReviewField label="1 · วันนี้ชนะอะไร?" value={f.win} onChange={v=>setF({...f,win:v})} ph="เช่น สอนครบ + ตัดคลิปเสร็จ"/>
+          <ReviewField label="2 · อะไรทำให้หลุด?" value={f.obstacle} onChange={v=>setF({...f,obstacle:v})} ph="ไม่มีก็เว้นได้"/>
+          <ReviewField label="3 · พรุ่งนี้โฟกัสอะไร?" value={f.tomorrowFocus} onChange={v=>setF({...f,tomorrowFocus:v})} ph="เลือก 1 อย่างพอ"/>
+          <div className="mb-3"><Label>4 · Energy จริงของวันนี้</Label>
+            <div className="flex gap-1.5">{["ล้า","กลางๆ","ดี","พีค"].map(e=>{const on=f.actualEnergy===e;return (
+              <button key={e} onClick={()=>setF({...f,actualEnergy:e})} className="flex-1 py-2 rounded-lg text-sm font-bold" style={{background:on?M.color:T.surf2,color:on?"#000":T.sub}}>{e}</button>
+            );})}</div>
+          </div>
+          <div className="flex items-center justify-between mb-3 px-1 text-xs" style={{color:T.muted}}><span>คะแนนตอนนี้ ~{liveScore}</span><span>เขียนรีวิว +10 EXP · นับเป็น Minimum Win</span></div>
+          <SaveBtn disabled={!f.win.trim()} onClick={submit}>บันทึก & จบวัน</SaveBtn>
+        </>
+      ) : (
+        <div className="text-center">
+          <div className="flex justify-center mb-3"><Ring value={result.score} color={rankOf(result.score).c} size={120} label={result.score} sub="/100"/></div>
+          <Pill color={rankOf(result.score).c} solid>{result.rank==="Recovery"?"Recovery Day":`${result.rank} Rank`}</Pill>
+          <div className="flex justify-center gap-2 mt-3">
+            <Stat label="EXP วันนี้" value={`+${result.earnedExp}`} color={T.purple}/>
+            <Stat label="Streak" value={`${streak} วัน`} color={T.orange}/>
+          </div>
+          <div className="text-sm mt-3 px-2" style={{color:T.sub}}>{encourage(result.rank, streak)}</div>
+          <button onClick={onClose} className="w-full py-3.5 rounded-xl font-bold mt-5" style={{background:T.green,color:"#000"}}>เยี่ยม!</button>
+        </div>
+      )}
+    </Sheet>
+  );
+}
+function ReviewField({label,value,onChange,ph}){
+  return (
+    <div className="mb-3"><Label>{label}</Label>
+      <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={ph} rows={2}
+        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none" style={{background:T.surf2,color:T.text,border:`1px solid ${T.border}`}}/>
+    </div>
+  );
+}
+
+
+document.getElementById("boot").style.display="none";
+createRoot(document.getElementById("root")).render(<App />);
+} catch(err){showErr("APP ERROR:\n"+(err&&err.stack?err.stack:err));}
+</script>
+</body>
+</html>
